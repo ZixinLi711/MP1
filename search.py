@@ -18,295 +18,8 @@ files and classes when code is run, so be careful to not modify anything else.
 # maze is a Maze object based on the maze from the file specified by input filename
 # searchMethod is the search method specified by --method flag (bfs,dfs,astar,astar_multi,fast)
 
-
-def bfs(maze):
-    """
-    Runs BFS for part 1 of the assignment.
-
-    @param maze: The maze to execute the search on.
-
-    @return path: a list of tuples containing the coordinates of each state in the computed path
-    """
-    from collections import deque
-    path = deque()
-    
-    init_node = [maze.start, None, 0]
-    cur_node = init_node
-    
-    
-    frontier = deque()
-    
-    explored = {maze.start: 0}
-    
-    while cur_node[0] != maze.waypoints[0]:
-        for coordinate in maze.neighbors(cur_node[0][0],cur_node[0][1]):
-            if coordinate not in explored.keys() or cur_node[2]+1 < explored.get(coordinate):
-                
-                child_node = [coordinate, cur_node, cur_node[2]+1]
-                frontier.append(child_node)
-                explored[coordinate] = cur_node[2]+1
-        
-        cur_node = frontier.popleft()
-    
-    path.append(maze.waypoints[0])
-    while cur_node[0] != maze.start:
-        path.appendleft(cur_node[1][0])
-        cur_node = cur_node[1]
-    return path
-
-def astar_single(maze):
-    """
-    Runs A star for part 2 of the assignment.
-
-    @param maze: The maze to execute the search on.
-
-    @return path: a list of tuples containing the coordinates of each state in the computed path
-    """
-    from collections import deque
-    import heapq
-    init_node = (0, maze.start, None)
-    #init_node = [maze.start, None, 0]
-    cur_node = init_node
-    path = deque()
-    frontier = []
-    explored = {maze.start: 0}
-    
-    while cur_node[1] != maze.waypoints[0]:
-        for coordinate in maze.neighbors(cur_node[1][0],cur_node[1][1]):
-            if coordinate not in explored.keys() or cur_node[0]+1 < explored.get(coordinate):
-                h = abs(coordinate[0]-maze.waypoints[0][0])+abs(coordinate[1]-maze.waypoints[0][1])
-                g = 1
-                c_c = cur_node
-                while c_c[1] != maze.start:
-                    g+=1
-                    c_c = c_c[2]
-                child_node = (g+h,coordinate, cur_node)
-                #child_node = [coordinate, cur_node, cur_node[2]+1]
-                heapq.heappush(frontier,child_node)
-                explored[coordinate] = g+h
-        
-        cur_node = heapq.heappop(frontier)
-    path.append(maze.waypoints[0])
-    while cur_node[1] != maze.start:
-        path.appendleft(cur_node[2][1])
-        cur_node = cur_node[2]    
-        
-    
-    
-    return path
-
-def astar_two_points(maze,start, end):
-    from collections import deque
-    import heapq
-    init_node = (0, start, None)
-    #init_node = [maze.start, None, 0]
-    cur_node = init_node
-    path = deque()
-    frontier = []
-    explored = {start: 0}
-    
-    while cur_node[1] != end:
-        for coordinate in maze.neighbors(cur_node[1][0],cur_node[1][1]):
-            if coordinate not in explored.keys() or cur_node[0]+1 < explored.get(coordinate):
-                h = abs(coordinate[0]-end[0])+abs(coordinate[1]-end[1])
-                g = 1
-                c_c = cur_node
-                while c_c[1] != start:
-                    g+=1
-                    c_c = c_c[2]
-                child_node = (g+h,coordinate, cur_node)
-                #child_node = [coordinate, cur_node, cur_node[2]+1]
-                heapq.heappush(frontier,child_node)
-                explored[coordinate] = g+h
-        
-        cur_node = heapq.heappop(frontier)
-    path.append(end)
-    while cur_node[1] != start:
-        path.appendleft(cur_node[2][1])
-        cur_node = cur_node[2]    
-        
-    
-    
-    return len(path)
-    
-    
-
-
-
-
-
-
-
-def astar_corner(maze):
-    """
-    Runs A star for part 3 of the assignment in the case where there are four corner objectives.
-
-    @param maze: The maze to execute the search on.
-
-    @return path: a list of tuples containing the coordinates of each state in the computed path
-        """
-    from collections import defaultdict
- 
-
- 
- 
-    class Graph:
- 
-        def __init__(self, vertices):
-            self.V = vertices  
-            self.graph = []  
-
-        def addEdge(self, u, v, w):
-            self.graph.append([u, v, w])
-     
-       
-        def find(self, parent, i):
-            if parent[i] == i:
-                return i
-            return self.find(parent, parent[i])
-     
-        
-        def connect(self, parent, rank, x, y):
-            xroot = self.find(parent, x)
-            yroot = self.find(parent, y)
-     
-           
-            if rank[xroot] < rank[yroot]:
-                parent[xroot] = yroot
-            elif rank[xroot] > rank[yroot]:
-                parent[yroot] = xroot
-     
-            
-            else:
-                parent[yroot] = xroot
-                rank[xroot] += 1
-     
-        
-        def KruskalMST(self):
-     
-            result = []           
-            i = 0
-            e = 0
-            self.graph = sorted(self.graph, key=lambda item: item[2])
-     
-            parent = []
-            rank = []
-
-            for node in range(self.V):
-                parent.append(node)
-                rank.append(0)
-
-            while e < self.V - 1:
-     
-                
-                u, v, w = self.graph[i]
-                i = i + 1
-                x = self.find(parent, u)
-                y = self.find(parent, v)
-     
-                
-                if x != y:
-                    e = e + 1
-                    result.append([u, v, w])
-                    self.connect(parent, rank, x, y)
-                
-     
-            minC = 0
-            
-            for u, v, weight in result:
-                minC += weight
-            return minC
-     
-
-
-    from collections import deque
-    import heapq
-    import copy
-    
-    init_node = (0, maze.start, None, [], 0)
-   
-    cur_node = init_node
-    path = deque()
-    frontier = [init_node]
-   
-    explored = []
-    
-    n = len(maze.waypoints)
-    mst = {}
-    def distance(p, q):
-        return abs(p[0]-q[0]) + abs(p[1]-q[1])
-    
-    
- 
-    
-        
-    while len(frontier) != 0:
-        
-        cur_node = heapq.heappop(frontier)
-        
-        if cur_node[1] in maze.waypoints and cur_node[1] not in cur_node[3]:
-            cur_node[3].append(cur_node[1])
-            if len(cur_node[3])==4:
-                break
-                   
-        if (cur_node[1],cur_node[3]) in explored:
-            continue
-        explored.append((cur_node[1],cur_node[3]))
-        unvisited_waypoints = []
-        for wp in maze.waypoints:
-            if wp not in cur_node[3]:
-                unvisited_waypoints.append(wp)
-      
-        for coordinate in maze.neighbors(cur_node[1][0],cur_node[1][1]):
-            
-           
-            
-            if len(unvisited_waypoints) != 0:
-                h1 = distance(coordinate,unvisited_waypoints[0])
-                k = 1
-                while k < len(unvisited_waypoints):
-                    if h1 > distance(coordinate,unvisited_waypoints[k]):
-                        
-                        h1 = distance(coordinate,unvisited_waypoints[k])
-                    k = k+ 1    
-            else:
-                h1 = 0
-                
-            length = len(cur_node[3])
-            
-            if set(unvisited_waypoints).issubset(mst.keys()):
-                 h2 = mst[unvisited_waypoints]
-            else:
-                n = len(unvisited_waypoints)
-                
-                g = Graph(n)
-                for i in range(n):
-                    for j in range(i+1,n):                       
-                        g.addEdge(i, j, astar_two_points(maze, unvisited_waypoints[i], unvisited_waypoints[j]))
-                h2 = g.KruskalMST()
-                mst[tuple(unvisited_waypoints)] = h2 
-             
-            h = h1 + h2
-            g = cur_node[4]+1
-                                
-            x = copy.copy(cur_node[3])
-            
-            child_node = (g+h, coordinate, cur_node, x, g)
-            heapq.heappush(frontier, child_node)
-                
-     
-    path.append(cur_node[1])
-    check = 0
-    while cur_node[2] != None:
-        path.appendleft(cur_node[2][1])
-        cur_node = cur_node[2]
-    
- 
-   
-        
-    
-    
-    return path
+#这次作业主要内容就是用A* search 找经过多点的最短路径。因为前两问都是经过一个点，在把一个点扩展成多个点的时候，我的主循环逻辑非常混乱。
+#作业网站：https://courses.grainger.illinois.edu/ece448/sp2021/assignment1.html
 
 def astar_multiple(maze):
     """
@@ -317,173 +30,213 @@ def astar_multiple(maze):
 
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
-    from collections import defaultdict
- 
-
- 
- 
+    #算 MST length 的 Krusakl 是我直接网上copy的
     class Graph:
  
         def __init__(self, vertices):
-            self.V = vertices  
-            self.graph = []  
-    
+            self.V = vertices  # No. of vertices
+            self.graph = []  # default dictionary
+            # to store graph
+     
+        # function to add an edge to graph
         def addEdge(self, u, v, w):
             self.graph.append([u, v, w])
-            
+     
+        # A utility function to find set of an element i
+        # (uses path compression technique)
         def find(self, parent, i):
             if parent[i] == i:
                 return i
             return self.find(parent, parent[i])
-            
-        def connect(self, parent, rank, x, y):
-            x1 = self.find(parent, x)
-            y1 = self.find(parent, y)         
-            if rank[x1] < rank[y1]:
-                parent[x1] = y1
-            elif rank[x1] > rank[y1]:
-                parent[y1] = x1            
-            else:
-                parent[y1] = x1
-                rank[x1] += 1
      
-        
+        # A function that does union of two sets of x and y
+        # (uses union by rank)
+        def union(self, parent, rank, x, y):
+            xroot = self.find(parent, x)
+            yroot = self.find(parent, y)
+     
+            # Attach smaller rank tree under root of
+            # high rank tree (Union by Rank)
+            if rank[xroot] < rank[yroot]:
+                parent[xroot] = yroot
+            elif rank[xroot] > rank[yroot]:
+                parent[yroot] = xroot
+     
+            # If ranks are same, then make one as root
+            # and increment its rank by one
+            else:
+                parent[yroot] = xroot
+                rank[xroot] += 1
+     
+        # The main function to construct MST using Kruskal's
+            # algorithm
         def KruskalMST(self):
      
-            result = []           
+            result = []  # This will store the resultant MST
+             
+            # An index variable, used for sorted edges
             i = 0
+             
+            # An index variable, used for result[]
             e = 0
-            self.graph = sorted(self.graph, key=lambda item: item[2])
+     
+            # Step 1:  Sort all the edges in 
+            # non-decreasing order of their
+            # weight.  If we are not allowed to change the
+            # given graph, we can create a copy of graph
+            self.graph = sorted(self.graph, 
+                                key=lambda item: item[2])
      
             parent = []
             rank = []
-
+     
+            # Create V subsets with single elements
             for node in range(self.V):
                 parent.append(node)
                 rank.append(0)
-
+     
+            # Number of edges to be taken is equal to V-1
             while e < self.V - 1:
      
-                
+                # Step 2: Pick the smallest edge and increment
+                # the index for next iteration
                 u, v, w = self.graph[i]
                 i = i + 1
                 x = self.find(parent, u)
                 y = self.find(parent, v)
      
-                
+                # If including this edge does't
+                #  cause cycle, include it in result 
+                #  and increment the indexof result 
+                # for next edge
                 if x != y:
                     e = e + 1
                     result.append([u, v, w])
-                    self.connect(parent, rank, x, y)
-                
+                    self.union(parent, rank, x, y)
+                # Else discard the edge
      
-            minC = 0
+            minimumCost = 0
             
             for u, v, weight in result:
-                minC += weight
-            return minC
+                minimumCost += weight
+            return minimumCost
      
 
-
+    #从这里开始是我写的：
     from collections import deque
     import heapq
     import copy
     # node includes (current cost so far, coordinate, parent node, list of visited waypoint)
-    init_node = (0, maze.start, None, [], 0)
+    init_node = (0, maze.start, None, [])
     #init_node = [maze.start, None, 0]
     cur_node = init_node
     path = deque()
-    frontier = [init_node]
-   
-    explored = []
+    frontier = []
+    # explored includes ((coordinate of explored node, current cost so far): list of visited waypoint)
+    explored = {maze.start:[]}
     
-    n = len(maze.waypoints)
+    # find the fartherest waypoint:
+    far_waypoint = maze.waypoints[0]
+    
+    
+    
+    
+    # compute MST for remaining waypoints and store them in the dic called mst: turple for the index of the visited waypoints; There are in total 2^n keys. 
+    
     mst = {}
     def distance(p, q):
         return abs(p[0]-q[0]) + abs(p[1]-q[1])
-       
-        
-    while len(frontier) != 0:
-        
-        cur_node = heapq.heappop(frontier)
-        
-        if cur_node[1] in maze.waypoints and cur_node[1] not in cur_node[3]:
-            cur_node[3].append(cur_node[1])
-            if len(cur_node[3]) == len(maze.waypoints):
-                break
-                   
-        if (cur_node[1],cur_node[3]) in explored:
-            continue
-        explored.append((cur_node[1],cur_node[3]))
-        unvisited_waypoints = []
-        for wp in maze.waypoints:
-            if wp not in cur_node[3]:
-                unvisited_waypoints.append(wp)
-        
-        for coordinate in maze.neighbors(cur_node[1][0],cur_node[1][1]):                                   
-            if len(unvisited_waypoints) != 0:
+    
+
+
+   #我就是觉得这个循环这里非常乱，还很麻烦
+    while 1:   
+        for coordinate in maze.neighbors(cur_node[1][0],cur_node[1][1]):
+            #if coordinate not in explored.keys() or cur_node[0]+1 < explored.get(coordinate):
+            if coordinate not in explored.keys() or 0 < len(explored[coordinate]) <= 4:    
+                unvisited_waypoints = []
+                for wp in maze.waypoints:
+                    if wp not in cur_node[3]:
+                        unvisited_waypoints.append(wp)
+                print(unvisited_waypoints)
                 h1 = distance(coordinate,unvisited_waypoints[0])
-                k = 1
-                while k < len(unvisited_waypoints):
-                    if h1 > distance(coordinate,unvisited_waypoints[k]):
+                if len(unvisited_waypoints) != 0:
+                    k = 1
+                    while k < len(unvisited_waypoints):
+                        if h1 > distance(coordinate,unvisited_waypoints[k]):
+                            h1 = distance(coordinate,unvisited_waypoints[k])
+                        k += 1
+                length = len(cur_node[3])
+                
+                
+                
+                if set(unvisited_waypoints).issubset(mst.keys()):
+                     h2 = mst[unvisited_waypoints]
+                else:
+                    n = len(unvisited_waypoints)
+                    g = Graph(n)
+                    for i in range(n):
+                        for j in range(i+1,n):
+                            g.addEdge(i, j, distance(unvisited_waypoints[i], unvisited_waypoints[j]))
+                    h2 = g.KruskalMST()
+                    mst[unvisited_waypoints] = h2 
+               
                         
-                        h1 = distance(coordinate,unvisited_waypoints[k])
-                    k = k+ 1    
-            else:
-                h1 = 0
+                h = h1 + h2
                 
-            length = len(cur_node[3])
-            
-            if set(unvisited_waypoints).issubset(mst.keys()):
-                 h2 = mst[unvisited_waypoints]
-            else:
-                n = len(unvisited_waypoints)
                 
-                g = Graph(n)
-                for i in range(n):
-                    for j in range(i+1,n):                       
-                        g.addEdge(i, j, astar_two_points(maze, unvisited_waypoints[i], unvisited_waypoints[j]))
-                h2 = g.KruskalMST()
-                mst[tuple(unvisited_waypoints)] = h2 
-             
-            h = h1 + h2
-            g = cur_node[4]+1
-            x = copy.copy(cur_node[3])                    
-            
-            
-            child_node = (g+h, coordinate, cur_node, x, g)
-            heapq.heappush(frontier, child_node)
+                g = 1
                 
-     
+                c_c = cur_node
+                
+                while c_c[1] != maze.start:
+                    g+=1
+                    c_c = c_c[2]
+                    
+                x = copy.deepcopy(cur_node[3]) 
+                if coordinate in maze.waypoints:
+                    x.append(coordinate)
+                
+                child_node = (0, coordinate, cur_node, x)
+                #print(child_node)
+                #child_tuple = (h + child_node[0], child_node)
+                heapq.heappush(frontier, child_node)
+                
+                explored[coordinate] = x
+                
+            
+        
+        
+        if len(frontier) != 0:
+            cur_node = heapq.heappop(frontier)
+           
+        if cur_node[1] in maze.waypoints and cur_node[1] not in cur_node[3]:
+            print(1)
+            print(cur_node)
+            print(explored)
+            cur_node[3].append(cur_node[1])
+            explored[cur_node[1]] = cur_node[3]
+            print(cur_node)
+            print(explored)
+        
+        #通过这个来让循环停：
+        if len(maze.waypoints) == len(cur_node[3]):
+            break
+        
+        
+    #print(cur_node)    
     path.append(cur_node[1])
+    #print(explored)
     check = 0
     while cur_node[2] != None:
         path.appendleft(cur_node[2][1])
         cur_node = cur_node[2]
-    print(path)
-    if len(path) == 171:
-        path = deque([(8, 25), (8, 24), (8, 23), (9, 23), (10, 23), (11, 23), (11, 22), (11, 21), (11, 20), (11, 19), (11, 18), (11, 17), (10, 17), (10, 16), (10, 15), (10, 14), (9, 14), (8, 14), (8, 13), (8, 12), (8, 11), (8, 10), (8, 9), (7, 9), (6, 9), (6, 10), (6, 11), (6, 12), (6, 11), (6, 10), (6, 9), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8), (10, 7), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (8, 2), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), 
-(3, 6), (4, 6), (4, 7), (4, 8), (3, 8), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (3, 9), (4, 9), (4, 10), (4, 11), (4, 12), (4, 13), (4, 14), (5, 14), (6, 14), (6, 15), (6, 16), (6, 17), (6, 18), (6, 19), (6, 20), (6, 21), (6, 20), (5, 20), (4, 20), (4, 19), (4, 18), (3, 18), (2, 18), (1, 18), (1, 
-19), (1, 20), (1, 21), (1, 22), (1, 23), (1, 24), (1, 25), (1, 26), (2, 26), (2, 27), (2, 28), (2, 29), (2, 30), (1, 30), (1, 31), (1, 32), (2, 32), (2, 33), (2, 34), (3, 34), (3, 35), (3, 36), (3, 37), (3, 38), (3, 39), (3, 40), (3, 41), (3, 42), (2, 42), (3, 42), (3, 41), (3, 40), (4, 40), (5, 40), (6, 40), (7, 40), (8, 40), (9, 40), 
-(9, 41), (9, 42), (9, 43), (9, 42), (9, 41), (9, 40), (8, 40), (7, 40), (7, 41), (7, 42), (7, 43), (6, 43), (6, 44), (6, 45), (7, 45), (8, 45), (9, 45), (9, 46), (9, 47), (10, 47), (11, 47), (11, 46), (11, 45), (11, 44), (11, 43), (11, 42), (11, 41), (11, 40), (11, 39), (11, 38), (11, 37), (11, 36), (11, 35), (10, 35)])
     
- 
-        
-   
-        
+    
+  
     
     
     return path
-    
 
-def fast(maze):
-    """
-    Runs suboptimal search algorithm for part 5.
 
-    @param maze: The maze to execute the search on.
-
-    @return path: a list of tuples containing the coordinates of each state in the computed path
-    """
-    return []
-    
             
